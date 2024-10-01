@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat com Gemini</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    #chatContainer {
+      border: 1px solid #ccc;
+      padding: 10px;
+      width: 80%;
+      margin-top: 20px;
+      background-color: #f9f9f9;
+      overflow-y: auto;
+      height: 400px;
+    }
+    .userMessage, .aiResponse {
+      margin: 5px 0;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .userMessage {
+      background-color: #d1e7dd;
+      align-self: flex-end;
+    }
+    .aiResponse {
+      background-color: #cfe2ff;
+    }
+    #inputContainer {
+      display: flex;
+      margin-top: 10px;
+    }
+    #userInput, #pdfInput {
+      flex-grow: 1;
+      padding: 10px;
+      margin-right: 5px;
+    }
+    #sendButton {
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Chat com Gemini</h1>
+  <div id="chatContainer"></div>
+  <div id="inputContainer">
+    <input type="text" id="userInput" placeholder="Digite sua pergunta..." />
+    <button id="sendButton">Enviar</button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "@google/generative-ai": "https://esm.run/@google/generative-ai"
+      }
+    }
+  </script>
+  <script type="module">
+    import { GoogleGenerativeAI } from "@google/generative-ai";
+
+    const API_KEY = "AIzaSyBQTwG5tqHhDErBLVzMtmsO9KYrv0inANY"; // API key
+    const genAI = new GoogleGenerativeAI(API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    document.getElementById('sendButton').addEventListener('click', async () => {
+      const userInput = document.getElementById('userInput').value;
+
+      if (!userInput) {
+        alert('Por favor, digite sua pergunta.');
+        return;
+      }
+
+      addMessageToChat(userInput, 'userMessage');
+      document.getElementById('userInput').value = ''; // Limpa o campo de entrada
+
+      const prompt = `Você é um assistente amigável e responde a perguntas abertas. O limite de caracteres para sua resposta é de 450. Pergunta: ${userInput}`;
+
+      try {
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        let text = await response.text();
+        addMessageToChat(text, 'aiResponse');
+      } catch (error) {
+        console.error('Erro ao gerar conteúdo:', error);
+        addMessageToChat("Erro ao gerar resposta.", 'aiResponse');
+      }
+    });
+
+    function addMessageToChat(message, className) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = className;
+      messageDiv.innerText = message;
+    }
